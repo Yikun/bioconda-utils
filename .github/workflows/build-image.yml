@@ -14,7 +14,15 @@ jobs:
   build:
     name: Build image
     runs-on: ubuntu-20.04
-
+    strategy:
+      matrix:
+        include:
+          - dockerfile: Dockerfile.aarch64
+            arch: arm64
+            image: bioconda-utils-build-env-cos7-aarch64
+          - dockerfile: Dockerfile
+            arch: amd64
+            image: bioconda-utils-build-env-cos7
     steps:
     - uses: actions/checkout@v3
       with:
@@ -33,39 +41,21 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y qemu-user-static
 
-    - name: Build aarch64 image
-      id: buildah-build-aarch64
+    - name: Build ${{ matrix.arch }} image
+      id: buildah-build-${{ matrix.arch }}
       uses: redhat-actions/buildah-build@v2
       with:
         image: bioconda-utils-build-env-cos7-aarch64
-        arch: arm64
+        arch: ${{ matrix.arch }}
         tags: >-
           latest
           ${{ steps.get-tag.outputs.tag }}
         dockerfiles: |
-          ./Dockerfile.aarch64
+          ./${{ matrix.dockerfile }}
 
-    - name: Test built image aarch64
+    - name: Test built image ${{ matrix.arch }}
       run: |
-        image='${{ steps.buildah-build-aarch64.outputs.image }}'
-        for tag in ${{ steps.buildah-build-aarch64.outputs.tags }} ; do
-          podman run --rm "${image}:${tag}" bioconda-utils --version
-        done
-
-    - name: Build image
-      id: buildah-build
-      uses: redhat-actions/buildah-build@v2
-      with:
-        image: bioconda-utils-build-env-cos7
-        tags: >-
-          latest
-          ${{ steps.get-tag.outputs.tag }}
-        dockerfiles: |
-          ./Dockerfile
-
-    - name: Test built image
-      run: |
-        image='${{ steps.buildah-build.outputs.image }}'
-        for tag in ${{ steps.buildah-build.outputs.tags }} ; do
+        image='${{ steps.buildah-build-${{ matrix.arch }}.outputs.image }}'
+        for tag in ${{ steps.buildah-build-${{ matrix.arch }}.outputs.tags }} ; do
           podman run --rm "${image}:${tag}" bioconda-utils --version
         done
