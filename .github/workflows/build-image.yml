@@ -41,8 +41,8 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y qemu-user-static
 
-    - name: Build ${{ matrix.arch }} image
-      id: buildah-build-${{ matrix.arch }}
+    - name: Build image
+      id: buildah-build
       uses: redhat-actions/buildah-build@v2
       with:
         image: bioconda-utils-build-env-cos7-aarch64
@@ -55,7 +55,7 @@ jobs:
 
     - name: Test built image ${{ matrix.arch }}
       run: |
-        image='${{ steps.buildah-build-${{ matrix.arch }}.outputs.image }}'
-        for tag in ${{ steps.buildah-build-${{ matrix.arch }}.outputs.tags }} ; do
+        image='${{ steps.buildah-build.outputs.image }}'
+        for tag in ${{ steps.buildah-build.outputs.tags }} ; do
           podman run --rm "${image}:${tag}" bioconda-utils --version
         done
