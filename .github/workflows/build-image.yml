@@ -45,7 +45,7 @@ jobs:
       id: buildah-build
       uses: redhat-actions/buildah-build@v2
       with:
-        image: bioconda-utils-build-env-cos7-aarch64
+        image: ${{ matrix.image }}
         arch: ${{ matrix.arch }}
         tags: >-
           latest
