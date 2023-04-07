@@ -14,7 +14,7 @@ tqdm>=4.26           # Progress monitor
 ruamel_yaml=0.15.*   # Recipe YAML parsing
 pyaml=17.12.*        # Faster YAML parser (deprecate?)
 networkx=2.*
-pandas=1.5.*
+pandas=1.4.*
 numpy=1.19.*         # Avoid breaking pandas on OSX
 libblas=*=*openblas  # Avoid large mkl package (pulled in by pandas)
 boltons=18.*
