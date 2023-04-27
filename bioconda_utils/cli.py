@@ -35,6 +35,7 @@ from . import bioconductor_skeleton as _bioconductor_skeleton
 from . import cran_skeleton
 from . import update_pinnings
 from . import graph
+from . import pkg_test
 from .githandler import BiocondaRepo, install_gpg_key
 
 logger = logging.getLogger(__name__)
@@ -379,6 +380,8 @@ def do_lint(recipe_folder, config, packages="*", cache=None, list_checks=False,
      help='Build packages in docker container.')
 @arg('--mulled-test', action='store_true', help="Run a mulled-build test on the built package")
 @arg('--mulled-upload-target', help="Provide a quay.io target to push mulled docker images to.")
+@arg('--mulled-conda-image', help='''Conda Docker image to install the package with during
+     the mulled based tests.''')
 @arg('--build_script_template', help='''Filename to optionally replace build
      script template used by the Docker container. By default use
      docker_utils.BUILD_SCRIPT_TEMPLATE. Only used if --docker is True.''')
@@ -423,12 +426,16 @@ def do_lint(recipe_folder, config, packages="*", cache=None, list_checks=False,
      than one worker, then make sure to give each a different offset!''')
 @arg('--keep-old-work', action='store_true', help='''Do not remove anything
 from environment, even after successful build and test.''')
+@arg('--docker-base-image', help='''Name of base image that can be used in
+     Dockerfile template.''')
 @enable_logging()
 def build(recipe_folder, config, packages="*", git_range=None, testonly=False,
           force=False, docker=None, mulled_test=False, build_script_template=None,
           pkg_dir=None, anaconda_upload=False, mulled_upload_target=None,
           build_image=False, keep_image=False, lint=False, lint_exclude=None,
-          check_channels=None, n_workers=1, worker_offset=0, keep_old_work=False):
+          check_channels=None, n_workers=1, worker_offset=0, keep_old_work=False,
+          mulled_conda_image=pkg_test.MULLED_CONDA_IMAGE,
+          docker_base_image='quay.io/bioconda/bioconda-utils-build-env-cos7:{}'.format(VERSION.replace('+', '_'))):
     cfg = utils.load_config(config)
     setup = cfg.get('setup', None)
     if setup:
@@ -454,6 +461,7 @@ def build(recipe_folder, config, packages="*", git_range=None, testonly=False,
             use_host_conda_bld=use_host_conda_bld,
             keep_image=keep_image,
             build_image=build_image,
+            docker_base_image=docker_base_image
         )
     else:
         docker_builder = None
@@ -476,7 +484,8 @@ def build(recipe_folder, config, packages="*", git_range=None, testonly=False,
                             label=label,
                             n_workers=n_workers,
                             worker_offset=worker_offset,
-                            keep_old_work=keep_old_work)
+                            keep_old_work=keep_old_work,
+                            mulled_conda_image=mulled_conda_image)
     exit(0 if success else 1)
 
 
